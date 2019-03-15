@@ -11,11 +11,12 @@ import string
 
 def get_date(date_string):
     """
-    Get date and format it in friendly sorting way.
+    Gets date and formats it in friendly sorting way.
 
     :param date_string: The original date string parsed in HTML file
     :return: The date well formated
     """
+
     article_date = re.search("(\d{1,2}) (\w+) (\d{4})", date_string)
     day = article_date.group(1)
     day = "{num:02d}".format(num=int(day))
@@ -37,6 +38,7 @@ def get_journal(journal_string):
     string parsed in HTML file
     :return: The journal's title well formated
     """
+
     journal_title = journal_string.text.strip()
     journal_title = journal_title.replace(" ", "-")
     return journal_title
@@ -49,6 +51,7 @@ def get_title(title_string):
     :param title_string: The original date string parsed in HTML file
     :return: The article's title well formated
     """
+
     for c in string.punctuation:
         title = title_string.text.replace(c, "")
     title = title.replace(" ", "-")
@@ -64,6 +67,7 @@ def get_author(author_string):
     :param title_string: The original date string parsed in HTML file
     :return: The article's title well formated
     """
+
     if author_string is not None:
         journal_title = author_string.text.replace(" ", "-")
         journal_title = journal_title.replace("*", "")
@@ -74,7 +78,7 @@ def get_author(author_string):
 
 def html_parser(source):
     """
-    Parse the html file exporter from Europress
+    Parses the html file exporter from Europress
     and call the above functions to get the variables
     and the contents of the articles.
 
@@ -82,6 +86,7 @@ def html_parser(source):
     :return: a list of dictionnaries containing
     the variables and the content for each article
     """
+
     html = open(source, "r")
     content = html.read()
     soup = BeautifulSoup(content, "lxml")
@@ -117,13 +122,14 @@ def html_parser(source):
 
 def export_lexico3(articles):
     """
-    Export the corpus of articles in a text
+    Exports the corpus of articles in a text
     file formated for Lexico3 software.
 
     :param articles: list containing all the dictionnaries
     of articles.
     :return : confirmation string in stdout.
     """
+
     with open("corpus_lexico3.txt", "w") as file:
         for a in articles:
             file.write("<date={}>\r".format(a["date"]))
@@ -138,13 +144,14 @@ def export_lexico3(articles):
 
 def export_iramuteq(articles):
     """
-    Export the corpus of articles in a text
+    Exports the corpus of articles in a text
     file formated for Iramuteq software.
 
     :param articles: list containing all the dictionnaries
     of articles.
     :return : confirmation string in stdout.
     """
+
     with open("corpus_Iramuteq.txt", "w") as file:
         for a in articles:
             if "author" in a:
@@ -162,13 +169,14 @@ def export_iramuteq(articles):
 
 def export_txm(articles):
     """
-    Export the corpus of articles in a XML
+    Exports the corpus of articles in a XML
     file formated for TXM software.
 
     :param articles: list containing all the dictionnaries
     of articles.
     :return : confirmation string in stdout.
     """
+
     root_final = etree.Element("corpus")
     doc = etree.ElementTree(root_final)
     for a in articles:
