@@ -207,4 +207,14 @@ if __name__ == "__main__":
 
     # Calling the functions
     results = html_parser(html_source)
-    export_lexico3(results)
+
+    corpus_t = input("Format de corpus (lexico, iramuteq ou txm) : ")
+
+    if corpus_t == "lexico":
+        export_lexico3(results)
+    elif corpus_t == "iramuteq":
+        export_iramuteq(results)
+    elif corpus_t == "txm":
+        export_txm(results)
+    else:
+        print("Format de corpus non reconnu.")
