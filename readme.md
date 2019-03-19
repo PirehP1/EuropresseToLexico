@@ -28,5 +28,6 @@ Script python 3.6 permettant d'exporter un fichier HTML produit par le service [
 
 * Appel du script :
 `python3 EuropresseToLexico.py`
-* il faut alors indiquer le chemin vers le fichier HTML Europresse
-* un fichier de corpus est produit à la fin de l'exécution du script.
+  * il faut alors indiquer le chemin vers le fichier HTML Europresse
+  * puis le format de corpus souhaité : "iramuteq", "lexico" ou "txm"
+  * un fichier de corpus est produit à la fin de l'exécution du script dans le répertoire courant.
