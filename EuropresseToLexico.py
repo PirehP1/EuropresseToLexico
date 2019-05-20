@@ -48,7 +48,7 @@ def get_title(title_string):
     """
     Return article's title well formated.
 
-    :param title_string: The original date string parsed in HTML file
+    :param title_string: The original title string parsed in HTML file
     :return: The article's title well formated
     """
 
@@ -56,6 +56,7 @@ def get_title(title_string):
         title = title_string.text.replace(c, "")
     title = title.replace(" ", "-")
     title = title.replace("*", "")
+    title = title.replace("\"", "")
     return title
 
 
@@ -78,7 +79,7 @@ def get_author(author_string):
 
 def html_parser(source):
     """
-    Parses the html file exporter from Europress
+    Parses the html file exported from Europress
     and call the above functions to get the variables
     and the contents of the articles.
 
