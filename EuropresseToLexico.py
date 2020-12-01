@@ -121,6 +121,21 @@ def html_parser(source):
     return exported_articles
 
 
+def lines_lenght(string, width):
+    """
+    Slices a string according a number of words
+    as length limit.
+
+    :param string: string to slice.
+    :param width: number of words.
+    :return : a list containing the lines
+    """
+
+    words = string.split()
+    for i in range(0, len(words), width):
+        yield " ".join(words[i:i+width])
+
+
 def export_lexico3(articles):
     """
     Exports the corpus of articles in a text
@@ -191,10 +206,32 @@ def export_txm(articles):
             article_node = etree.SubElement(root_final, "article",
                                             date="{}".format(a["date"]),
                                             journal="{}".format(a["journal"]),
-                                            titre="{}".format(a["title"]))
-        article_node.text = a["content"]
+                                             titre="{}".format(a["title"]))
+        final_content = "\n\r".join(lines_lenght(a["content"], 10))
+        article_node.text = final_content
     doc.write("corpus_TXM.xml", xml_declaration=True, encoding="utf-8")
     return print("Corpus exporté au format TXM !")
+
+
+def export_text(articles):
+    """
+    Exports the corpus of articles in a simple
+    text file with no specific formating.
+
+    :param articles: list containing all the dictionnaries
+    of articles.
+    :return : confirmation string in stdout.
+    """
+
+    with open("corpus_text.txt", "w") as file:
+        for a in articles:
+            if "author" in a:
+                file.write("Date : {} Journal : {} Title : {} Auteur : {}\n".format(a["date"], a["journal"], a["title"], a["author"]))
+            else:
+                file.write("Date : {} Journal : {} Title : {}\n".format(a["date"], a["journal"], a["title"]))
+
+            file.write("{}\n".format(a["content"]))
+    return print("Corpus exporté au format textuel simple !")
 
 
 if __name__ == "__main__":
@@ -209,7 +246,7 @@ if __name__ == "__main__":
     # Calling the functions
     results = html_parser(html_source)
 
-    corpus_t = input("Format de corpus (lexico, iramuteq ou txm) : ")
+    corpus_t = input("Format de corpus (lexico, iramuteq, txm ou text) : ")
 
     if corpus_t == "lexico":
         export_lexico3(results)
@@ -217,5 +254,7 @@ if __name__ == "__main__":
         export_iramuteq(results)
     elif corpus_t == "txm":
         export_txm(results)
+    elif corpus_t == "text":
+        export_text(results)
     else:
         print("Format de corpus non reconnu.")
