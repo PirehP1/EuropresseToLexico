@@ -31,3 +31,7 @@ Script python 3.6 permettant à partir d'un fichier HTML produit par le service 
   * il faut alors indiquer le chemin vers le fichier HTML Europresse
   * puis le format de corpus souhaité : "iramuteq", "lexico" ou "txm"
   * un fichier de corpus est produit à la fin de l'exécution du script dans le répertoire courant.
+
+## Téléchargement du fichier HTML Europresse
+
+Cf. vidéo https://framagit.org/leodumont/europressetolexico/-/blob/master/europresse_export_html.mp4
