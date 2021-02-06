@@ -37,7 +37,7 @@ Script python 3.6 permettant à partir d'un fichier HTML produit par le service 
 Cf. vidéo https://framagit.org/leodumont/europressetolexico/-/blob/master/europresse_export_html.mp4
 
 <figure class="video_container">
-  <video controls="true" allowfullscreen="true" poster="path/to/poster_image.png">
+  <video controls="true" allowfullscreen="true">
     <source src="europresse_export_html.mp4" type="video/mp4">
   </video>
 </figure>
