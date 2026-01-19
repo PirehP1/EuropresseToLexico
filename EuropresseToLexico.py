@@ -7,6 +7,7 @@ import calendar
 import locale
 from lxml import etree
 import string
+import csv
 
 
 def get_date(date_string):
@@ -17,7 +18,7 @@ def get_date(date_string):
     :return: The date well formated
     """
 
-    article_date = re.search("(\d{1,2}) (\w+) (\d{4})", date_string)
+    article_date = re.search(r"(\d{1,2}) (\w+) (\d{4})", date_string)
     day = article_date.group(1)
     day = "{num:02d}".format(num=int(day))
     month = article_date.group(2)
@@ -40,7 +41,10 @@ def get_journal(journal_string):
     """
 
     journal_title = journal_string.text.strip()
-    journal_title = journal_title.replace(" ", "-")
+    # journal_title = journal_title.replace(" ", "-")
+    # journal_title = journal_title.replace("'", "")
+    # journal_title = journal_title.replace(",", "")
+    journal_title = re.sub(r'\W+', '', journal_title)
     return journal_title
 
 
@@ -51,12 +55,17 @@ def get_title(title_string):
     :param title_string: The original title string parsed in HTML file
     :return: The article's title well formated
     """
-
-    for c in string.punctuation:
-        title = title_string.text.replace(c, "")
-    title = title.replace(" ", "-")
-    title = title.replace("*", "")
-    title = title.replace("\"", "")
+    title = title_string.text
+    title = re.sub(r'\W+', '', title)
+    # for c in string.punctuation:
+    #     title = title_string.text.replace(c, "")
+    # title = title.replace(" ", "-")
+    # title = title.replace("*", "")
+    # title = title.replace("\"", "")
+    # title = title.replace("'", "")
+    # title = title.replace(",", "-")
+    # title = title.replace(";", "-")
+    # title = title.replace(":", "")
     return title
 
 
@@ -70,9 +79,12 @@ def get_author(author_string):
     """
 
     if author_string is not None:
-        journal_title = author_string.text.replace(" ", "-")
-        journal_title = journal_title.replace("*", "")
-        return journal_title
+        author_string = author_string.text
+        author_string = author_string.replace(" ", "-")
+        author_string = author_string.replace(",", "-")
+        author_string = author_string.replace(";", "-")
+        author_string = author_string.replace("*", "")
+        return author_string
     else:
         return None
 
@@ -106,7 +118,10 @@ def html_parser(source):
 
         article_title = a.find("p", {"class",
                                      "titreArticleVisu rdp__articletitle"})
-        article["title"] = get_title(article_title)
+        if article_title is not None:
+            article["title"] = get_title(article_title)
+        else:
+            article["title"] = None
 
         article_author = a.find("div", {"class", "docAuthors"})
         if article_author is not None:
@@ -114,6 +129,12 @@ def html_parser(source):
             article["author"] = author
 
         article_content = a.find("div", {"class", "docOcurrContainer"})
+        # article_content_t = article_content.text
+        # article_content_t = article_content_t.encode('utf-8', errors='ignore')
+        # article_content_tp = article_content_t.decode()
+        # article_content_tp = re.sub(r'[^\x00-\x7F]+', ' ', article_content_t)
+        # removelist = r".,;!?:’'ʼ\s\n-"
+        # article_content_tp = re.sub(r'[^\w'+removelist+']', '', article_content_t)
         article["content"] = article_content.text
 
         exported_articles.append(article)
@@ -170,14 +191,22 @@ def export_iramuteq(articles):
 
     with open("corpus_Iramuteq.txt", "w") as file:
         for a in articles:
+            adate = re.search(r"(\d{4})-(\d{1,2})-(\d{1,2})", a["date"])
+            day = adate.group(3)
+            month = adate.group(2)
+            year = adate.group(1)
+            # file.write("\n**** *date_{} *journal_{} \n\n"
+            #            .format(a["date"], a["journal"]))
             if "author" in a:
-                file.write("**** *date_{} *journal_{} *author_{} *title_{}\n"
-                           .format(a["date"], a["journal"],
+                file.write("\n**** *date_{} *annee_{} *mois_{} *jour_{} *journal_{} *author_{} *title_{}\n"
+                           .format(a["date"], year, month, day, a["journal"],
                                    a["author"], a["title"]))
+                # file.write("\n**** *date_{} *annee_{} *mois_{} *jour_{}"
+                #            .format(a["date"], year, month, day))
             else:
-                file.write("**** *date_{} *journal_{} *title_{}\n"
-                           .format(a["date"], a["journal"], a["title"]))
-
+                file.write("\n**** *date_{} *annee_{} *mois_{} *jour_{} *journal_{} *title_{}\n".format(a["date"], year, month, day, a["journal"], a["title"]))
+                # file.write("\n**** *date_{} *annee_{} *mois_{} *jour_{}"
+                #            .format(a["date"], year, month, day))
             contenu = a["content"].replace("*", "")
             file.write("{}\n".format(contenu))
     return print("Corpus exporté au format Iramuteq !")
@@ -206,9 +235,13 @@ def export_txm(articles):
             article_node = etree.SubElement(root_final, "article",
                                             date="{}".format(a["date"]),
                                             journal="{}".format(a["journal"]),
-                                             titre="{}".format(a["title"]))
-        final_content = "\n\r".join(lines_lenght(a["content"], 10))
-        article_node.text = final_content
+                                            titre="{}".format(a["title"]))
+        final_content = "\n".join(lines_lenght(a["content"], 10))
+        texte = final_content
+        texte = texte.replace("<", "")
+        texte = texte.replace(">", "")
+        texte = texte.replace("&", "et")
+        article_node.text = texte
     doc.write("corpus_TXM.xml", xml_declaration=True, encoding="utf-8")
     return print("Corpus exporté au format TXM !")
 
@@ -226,12 +259,38 @@ def export_text(articles):
     with open("corpus_text.txt", "w") as file:
         for a in articles:
             if "author" in a:
-                file.write("Date : {} Journal : {} Title : {} Auteur : {}\n".format(a["date"], a["journal"], a["title"], a["author"]))
+                file.write(
+                    "Date : {} Journal : {} Title : {} Auteur : {}\n".format(
+                        a["date"], a["journal"], a["title"], a["author"]))
             else:
-                file.write("Date : {} Journal : {} Title : {}\n".format(a["date"], a["journal"], a["title"]))
+                file.write("Date : {} Journal : {} Title : {}\n".format(
+                    a["date"], a["journal"], a["title"]))
 
             file.write("{}\n".format(a["content"]))
     return print("Corpus exporté au format textuel simple !")
+
+
+def export_csv(articles):
+    """
+    Exports the corpus of articles in csv file.
+
+    :param articles: list containing all the dictionnaries
+    of articles.
+    :return : csv file in current dir.
+    """
+
+    csv_columns = ["date", "journal", "title", "author", "content"]
+    with open("corpus.csv", "w") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        writer.writeheader()
+        for a in articles:
+            if "author" in a:
+                writer.writerow(a)
+            else:
+                a["author"] = ""
+                writer.writerow(a)
+
+    return print("Corpus exporté au CSV !")
 
 
 if __name__ == "__main__":
@@ -246,7 +305,7 @@ if __name__ == "__main__":
     # Calling the functions
     results = html_parser(html_source)
 
-    corpus_t = input("Format de corpus (lexico, iramuteq, txm ou text) : ")
+    corpus_t = input("Format de corpus (lexico, iramuteq, txm, text ou csv) : ")
 
     if corpus_t == "lexico":
         export_lexico3(results)
@@ -256,5 +315,7 @@ if __name__ == "__main__":
         export_txm(results)
     elif corpus_t == "text":
         export_text(results)
+    elif corpus_t == "csv":
+        export_csv(results)
     else:
         print("Format de corpus non reconnu.")
